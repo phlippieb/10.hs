@@ -35,7 +35,8 @@ Choose a direction - up, down, left or right, by entering the corresponding wasd
 Two things will now happen.
 One: the pieces on the board slide in the direction of your choice. 
 And two: the computer places a new piece on the board, indicated by an asterisk.
-For example, after entering `w` for up:
+This new piece will usually be a `1`, but sometimes you'll get a sneaky `2`.
+For example, after entering `w` for up, you might get:
 
 ```
 . 1 . . 1*

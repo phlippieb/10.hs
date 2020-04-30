@@ -84,6 +84,7 @@ enumerateboard b = zip [1..] (concat b)
 cturn :: [[Int]] -> StdGen -> ([[Int]], Int)
 cturn b g =
     let 
+        r = random1or2 g
         xs = zeroIndices b
         upperbound = length (xs)
         rs = randomRs (0, upperbound-1) g
@@ -92,7 +93,17 @@ cturn b g =
         s = length b
         index = mapback x s
     in
-        (replace2d index 1 b, x)
+        -- Replace the random 0 with the random 1 or 2.
+        -- Return the updated board as well as the updated index.
+        (replace2d index r b, x)
+
+-- Returns 1 or 2.
+-- There is an 80% chance that you'll get 1.
+random1or2 :: StdGen -> Int
+random1or2 g = let 
+    rs = randomRs (0 :: Int, 9 :: Int) g
+    r = rs !! 0
+    in if r > 7 then 2 else 1 -- [8,9] is 20% of [0..9], so 20% chance of getting a 2.
 
 -- Replace item at (row, col) with value in 2d list.
 replace2d :: (Int, Int) -> a -> [[a]] -> [[a]]
