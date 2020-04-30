@@ -3,7 +3,7 @@ import System.Random
 -- MARK: 
 -- GAME
 
-start = do
+main = do
     -- Computer goes first
     let b = initialBoard
     step1_check b
