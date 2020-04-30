@@ -15,57 +15,62 @@ initialBoard s = take s (repeat (take s (repeat 0)))
 step1_check :: [[Int]] -> IO ()
 step1_check b =
     if wins b then printWinMessage
-    else if loses b then printLoseMessage b
+    else if loses b then printLoseMessage b (-1)
     else step2_computer b
 
 step2_computer :: [[Int]] -> IO ()
 step2_computer b = do
     g <- newStdGen
-    let b' = cturn b g
-    step3_check b'
+    let (b', h) = cturn b g
+    step3_check b' h
 
-step3_check :: [[Int]] -> IO ()
-step3_check b =
+step3_check :: [[Int]] -> Int -> IO ()
+step3_check b h =
     if wins b then printWinMessage
-    else if loses b then printLoseMessage b
-    else step4_player b
+    else if loses b then printLoseMessage b h
+    else step4_player b h
 
-step4_player :: [[Int]] -> IO ()
-step4_player b = do
+step4_player :: [[Int]] -> Int -> IO ()
+step4_player b h = do
     putStrLn ""
-    putStrLn (showboard b)
+    putStrLn (showboard b h)
     putStrLn "Enter wasd: "
     move <- getLine
     let b' = pturn move b
     -- Only start a new round if something has changed.
     if b == b' then do
         putStrLn "Invalid move."
-        step4_player b
+        step4_player b h
     else 
         step1_check b'
 
-showboard :: [[Int]] -> String
-showboard b = 
-    let s = length b
-    in concat [
+printWinMessage :: IO ()
+printWinMessage =  do putStrLn "Nice."
+
+printLoseMessage :: [[Int]] -> Int -> IO ()
+printLoseMessage b h = do
+    putStrLn ""
+    putStrLn (showboard b h)
+    putStrLn "Oof, you lose."
+
+--- Show the given board. Highlight the given index.
+showboard :: [[Int]] -> Int -> String
+showboard b h = 
+    let 
+        s = length b
+    in 
+        concat [
         if i `mod` s == 0 then
             if c == 0 then ".\n"
+            else if i == (h+1) then (show c)++"*\n"
             else (show c)++"\n"
         else if c == 0 then ". "
+        else if i == (h+1) then (show c)++"*"
         else (show c)++" "
         | (i, c)<-(enumerateboard b)]
 
 enumerateboard :: [[Int]] -> [(Int, Int)]
 enumerateboard b = zip [1..] (concat b)
-
-printWinMessage :: IO ()
-printWinMessage =  do putStrLn "Nice."
-
-printLoseMessage :: [[Int]] -> IO ()
-printLoseMessage b = do
-    putStrLn ""
-    putStrLn (showboard b)
-    putStrLn "Oof, you lose."
 
 -- MARK: 
 -- COMPUTER'S TURN
@@ -73,7 +78,10 @@ printLoseMessage b = do
 -- Computer's turn
 -- Determine empty cells, pick one, and place a "1" there.
 -- Takes a board and a random generator.
-cturn :: [[Int]] -> StdGen -> [[Int]]
+-- Returns the updated board,
+-- and the flatspace index of the added character.
+-- Though I think maybe the caller could determine that?
+cturn :: [[Int]] -> StdGen -> ([[Int]], Int)
 cturn b g =
     let 
         xs = zeroIndices b
@@ -84,7 +92,7 @@ cturn b g =
         s = length b
         index = mapback x s
     in
-        replace2d index 1 b
+        (replace2d index 1 b, x)
 
 -- Replace item at (row, col) with value in 2d list.
 replace2d :: (Int, Int) -> a -> [[a]] -> [[a]]
