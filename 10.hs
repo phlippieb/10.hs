@@ -33,14 +33,16 @@ step3_check b =
 step4_player :: [[Int]] -> IO ()
 step4_player b = do
     putStrLn "---"
-    p b -- Print the board
-    putStr "Enter wasd: "
+    putStrLn (showboard b)
+    putStrLn "Enter wasd: "
     move <- getLine
-    let b' = pturn (move!!0) b
-    step1_check b'
-
-p :: [[Int]] -> IO ()
-p board = do putStrLn (showboard board)
+    let b' = pturn move b
+    -- Only start a new round if something has changed.
+    if b == b' then do
+        putStrLn "Invalid move."
+        step4_player b
+    else 
+        step1_check b'
 
 showboard :: [[Int]] -> String
 showboard board = concat [
@@ -120,13 +122,12 @@ select x xs = filter (\e -> x == (snd e)) xs
 -- Player's turn.
 -- Applies a chosen move (represented by a char*) to the board.
 -- * Move is expected to be w,a,s,d.
--- TODO we should probably also make this return whether a move was made? or else the caller can determine wheter b != b'
-pturn :: Char -> [[Int]] -> [[Int]]
-pturn 'w' b = mvup b
-pturn 'a' b = mvleft b
-pturn 's' b = mvdown b
-pturn 'd' b = mvright b
-pturn _ b = b
+pturn :: [Char] -> [[Int]] -> [[Int]]
+pturn ('w':_) b = mvup b
+pturn ('a':_) b = mvleft b
+pturn ('s':_) b = mvdown b
+pturn ('d':_) b = mvright b
+pturn _ b       = b
 
 -- Move a board left
 mvleft :: [[Int]] -> [[Int]]
