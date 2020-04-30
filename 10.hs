@@ -19,9 +19,10 @@ step1_check b =
     else step2_computer b
 
 step2_computer :: [[Int]] -> IO ()
-step2_computer b =
-    let b' = cturn b
-    in step3_check b'
+step2_computer b = do
+    g <- newStdGen
+    let b' = cturn b g
+    step3_check b'
 
 step3_check :: [[Int]] -> IO ()
 step3_check b =
@@ -58,13 +59,14 @@ enumerateboard board = zip [1..] (concat board)
 
 -- Computer's turn
 -- Determine empty cells, pick one, and place a "1" there.
-cturn :: [[Int]] -> [[Int]]
-cturn b =
+-- Takes a board and a random generator.
+cturn :: [[Int]] -> StdGen -> [[Int]]
+cturn b g =
     let 
         xs = zeroIndices b
         upperbound = length (xs)
-        -- Simulate picking a random index, for now, by picking the middle one.
-        i = quot upperbound 2
+        rs = randomRs (0, upperbound-1) g
+        i = rs !! 0
         x = xs !! i 
         index = mapback x
     in
