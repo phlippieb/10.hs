@@ -17,7 +17,8 @@ The only differences are:
 - In **10**, numbers grow linearly (1, 2, 3, 4, 5, etc) where in **2048**, they grow exponentially (1, 2, 4, 8, 16, etc).
 - In **10**, you win and the game ends when you get to 10, where in **2048**, you win when you get to 2048, but you can keep playing.
 
-Why the changes? Because I'm completely new to Haskell, and I didn't want to deal with string formatting, that's why.
+Why the changes? Because I'm completely new to Haskell, and I didn't want to deal with string formatting, that's why 😇 
+This makes **10** slightly easier than **2048**, because `2^10` is only 1024.
 
 When you start a game, you will see a 5x5 board (the size is a parameter in the source code, so you can easily tweak it).
 The board is mostly empty -- empty cells are indicated by periods (`.`) -- but there will be one non-empty cell. For example:
