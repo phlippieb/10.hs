@@ -1,16 +1,19 @@
 # 10.hs
 Haskell implementation of modified 2048
 
-## How to run
+## How to play
 
-Assuming you have [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) installed,
+```
+make run
+```
+
+### Requirements
+
+You will need [Haskell Stack](https://docs.haskellstack.org/en/stable/README/).
+See the link for installation instructions.
+
+You will also need to have `random` installed:
+
+```
 build the program:
-
-```
-stack install random
-stack ghc 10.hs
-```
-Then run it:
-```
-./10
 ```
