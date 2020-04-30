@@ -5,17 +5,17 @@ import System.Random
 
 main = do
     -- Computer goes first
-    let b = initialBoard
+    let b = initialBoard 5
     step1_check b
 
--- Creates an empty, 5x5, all-0s board.
-initialBoard :: [[Int]]
-initialBoard = take 5 (repeat (take 5 (repeat 0)))
+-- Creates an empty, SxS, all-0s board.
+initialBoard :: Int -> [[Int]]
+initialBoard s = take s (repeat (take s (repeat 0)))
 
 step1_check :: [[Int]] -> IO ()
 step1_check b =
-    if wins b then do putStrLn "Nice."
-    else if loses b then do putStrLn "Oof."
+    if wins b then printWinMessage
+    else if loses b then printLoseMessage b
     else step2_computer b
 
 step2_computer :: [[Int]] -> IO ()
@@ -26,13 +26,13 @@ step2_computer b = do
 
 step3_check :: [[Int]] -> IO ()
 step3_check b =
-    if wins b then do putStrLn "Nice."
-    else if loses b then do putStrLn "Oof."
+    if wins b then printWinMessage
+    else if loses b then printLoseMessage b
     else step4_player b
 
 step4_player :: [[Int]] -> IO ()
 step4_player b = do
-    putStrLn "---"
+    putStrLn ""
     putStrLn (showboard b)
     putStrLn "Enter wasd: "
     move <- getLine
@@ -45,16 +45,27 @@ step4_player b = do
         step1_check b'
 
 showboard :: [[Int]] -> String
-showboard board = concat [
-    if i `mod` 5 == 0 then
-        if c == 0 then ".\n"
-        else (show c)++"\n"
-    else if c == 0 then ". "
-    else (show c)++" "
-    | (i, c)<-(enumerateboard board)]
+showboard b = 
+    let s = length b
+    in concat [
+        if i `mod` s == 0 then
+            if c == 0 then ".\n"
+            else (show c)++"\n"
+        else if c == 0 then ". "
+        else (show c)++" "
+        | (i, c)<-(enumerateboard b)]
 
 enumerateboard :: [[Int]] -> [(Int, Int)]
-enumerateboard board = zip [1..] (concat board)
+enumerateboard b = zip [1..] (concat b)
+
+printWinMessage :: IO ()
+printWinMessage =  do putStrLn "Nice."
+
+printLoseMessage :: [[Int]] -> IO ()
+printLoseMessage b = do
+    putStrLn ""
+    putStrLn (showboard b)
+    putStrLn "Oof, you lose."
 
 -- MARK: 
 -- COMPUTER'S TURN
@@ -70,7 +81,8 @@ cturn b g =
         rs = randomRs (0, upperbound-1) g
         i = rs !! 0
         x = xs !! i 
-        index = mapback x
+        s = length b
+        index = mapback x s
     in
         replace2d index 1 b
 
@@ -87,11 +99,11 @@ replace 0 a (_:xs) = a:xs
 replace i a (x:xs) = x:(replace (i-1) a xs)
 
 -- Map the given index from flat space to a (row, col) in 2d space, 
--- assuming a 5x5 board.
-mapback :: Int -> (Int, Int)
-mapback i =
-    let row = quot i 5 -- i.e. floor of i/5
-        col = rem i 5 -- i.e. remainder of i/5
+-- for an SxS board.
+mapback :: Int -> Int -> (Int, Int)
+mapback i s =
+    let row = quot i s -- i.e. floor of i/s
+        col = rem i s -- i.e. remainder of i/s
     in (row, col)
 
 -- Returns a list of all indices of zero items in the given board;
@@ -192,7 +204,7 @@ wins b = 10 `elem` (flatten b)
 -- - There are no empty cells, AND
 -- - There are no available moves
 loses :: [[Int]] -> Bool
-loses b = (hasNoEmptyCells b) 
+loses b = (not (hasNoEmptyCells b))
     && (not (anyRowNeighboursMatch b)) 
     && (not (anyColNeighboursMatch b))
 
