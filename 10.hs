@@ -3,14 +3,11 @@ import System.Random
 -- MARK: 
 -- GAME
 
-main = do
-    -- Computer goes first
-    let b = initialBoard 5
-    step1_check b
+main = (step1_check . initialBoard) 5
 
 -- Creates an empty, SxS, all-0s board.
 initialBoard :: Int -> [[Int]]
-initialBoard s = take s (repeat (take s (repeat 0)))
+initialBoard s = take s (repeat (take s (repeat 0))) 
 
 step1_check :: [[Int]] -> IO ()
 step1_check b =
@@ -48,29 +45,30 @@ printWinMessage :: IO ()
 printWinMessage =  do putStrLn "Nice."
 
 printLoseMessage :: [[Int]] -> Int -> IO ()
-printLoseMessage b h = do
-    putStrLn ""
-    putStrLn (showboard b h)
-    putStrLn "Oof, you lose."
+printLoseMessage b h = do putStrLn ("\n"++(showboard b h)++"\nOof, you lose.")
 
 --- Show the given board. Highlight the given index.
 showboard :: [[Int]] -> Int -> String
 showboard b h = 
-    let 
-        s = length b
-    in 
-        concat [
-        if i `mod` s == 0 then
-            if c == 0 then ".\n"
-            else if i == (h+1) then (show c)++"*\n"
-            else (show c)++"\n"
-        else if c == 0 then ". "
-        else if i == (h+1) then (show c)++"*"
-        else (show c)++" "
-        | (i, c)<-(enumerateboard b)]
+    let s = length b
+    in concat [ showcell c i (h+1) s | (i,c) <- (zip [1..] . concat) b]
 
-enumerateboard :: [[Int]] -> [(Int, Int)]
-enumerateboard b = zip [1..] (concat b)
+-- Value, index, highlighted index, size -> String
+showcell :: Int -> Int -> Int -> Int -> String
+showcell x i h s = (showcellvalue x) ++ (showcelldecoration i h) ++ (showcellnewline i s)
+
+-- Value -> String
+showcellvalue :: Int -> String
+showcellvalue 0 = "."
+showcellvalue x = show x
+
+-- Index, highlighted index -> String
+showcelldecoration :: Int -> Int -> String
+showcelldecoration i h = if i==h then "*" else " "
+
+-- Index, size -> String
+showcellnewline :: Int -> Int -> String
+showcellnewline i s = if i `mod` s == 0 then "\n" else ""
 
 -- MARK: 
 -- COMPUTER'S TURN
@@ -128,24 +126,9 @@ mapback i s =
 -- Returns a list of all indices of zero items in the given board;
 -- indices are in "flat space".
 zeroIndices :: [[Int]] -> [Int]
-zeroIndices b = indicesOf (select 0 (enumerate (flatten b)))
-
--- Converts [value] to [(index, value)].
-enumerate :: [a] -> [(Int, a)]
-enumerate = zip [0..]
-
--- Extracts the indices of an enumerated list.
--- I.e. converts [(index, value)] to [index].
-indicesOf :: [(Int, a)] -> [Int]
-indicesOf = map fst
-
--- Converts [[a,b],[c,d]] to [a,b,c,d].
-flatten :: [[a]] -> [a]
-flatten = concat
-
--- Selects only 0-valued items from an enumerated list.
-select :: Int -> [(Int, Int)] -> [(Int, Int)]
-select x xs = filter (\e -> x == (snd e)) xs
+zeroIndices b = 
+    let select = (\x xs -> filter (\e -> x == snd e) xs)
+    in (map fst . select 0 . zip [0..] . concat) b
 
 -- MARK:
 -- PLAYER'S TURN
@@ -158,7 +141,7 @@ pturn ('w':_) b = mvup b
 pturn ('a':_) b = mvleft b
 pturn ('s':_) b = mvdown b
 pturn ('d':_) b = mvright b
-pturn _ b       = b
+pturn _       b = b
 
 -- Move a board left
 mvleft :: [[Int]] -> [[Int]]
@@ -166,18 +149,18 @@ mvleft b = map l b
 
 -- Move board up
 mvup :: [[Int]] -> [[Int]]
-mvup b = t (mvleft (t b))
+mvup b = (t . mvleft . t) b
 
 -- Move board right
 mvright :: [[Int]] -> [[Int]]
-mvright b = rh (mvleft (rh b))
+mvright b = (rh .  mvleft . rh) b
 
 -- Move board down
 mvdown :: [[Int]] -> [[Int]]
-mvdown b = rv (mvup (rv b))
+mvdown b = (rv . mvup . rv) b
 
 l :: [Int] -> [Int]
-l xs = mergeleft (sortleft xs)
+l xs = (mergeleft . sortleft) xs
 
 mergeleft :: [Int] -> [Int]
 mergeleft [] = []
@@ -217,19 +200,19 @@ rv b = reverse b
 
 -- The player wins if the board contains a 10.
 wins :: [[Int]] -> Bool
-wins b = 10 `elem` (flatten b)
+wins b = 10 `elem` (concat b)
 
 -- The player loses IF:
 -- - There are no empty cells, AND
 -- - There are no available moves
 loses :: [[Int]] -> Bool
-loses b = (not (hasNoEmptyCells b))
-    && (not (anyRowNeighboursMatch b)) 
-    && (not (anyColNeighboursMatch b))
+loses b = (not . hasNoEmptyCells) b
+    && (not . anyRowNeighboursMatch) b
+    && (not . anyColNeighboursMatch) b
 
 -- True if the given board has no empty cells.
 hasNoEmptyCells :: [[Int]] -> Bool
-hasNoEmptyCells b = 0 `elem` (flatten b)
+hasNoEmptyCells b = 0 `elem` (concat b)
 
 -- True if the 2d list contains any rows
 -- where those rows contain neighbours that match.
